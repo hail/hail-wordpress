@@ -22,7 +22,9 @@ class Hail_Helper {
   // private $clientSecret;
   private $config;
 
-  public function __construct($plugin_name) {
+  private static $instance;
+
+  function __construct($plugin_name) {
     $this->plugin_name = $plugin_name;
 
     $this->config = get_option($this->plugin_name);
@@ -46,6 +48,14 @@ class Hail_Helper {
 
     $this->predis = new Predis\Client();
 
+  }
+
+  public static function getInstance() {
+    if (!isset(self::$instance)) {
+      self::$instance = new self('hail');
+    }
+
+    return self::$instance;
   }
 
   public function getClientID() {
@@ -139,6 +149,10 @@ class Hail_Helper {
 
   public function test() {
     return $this->call($this->hailBaseURI . 'api/v1/me');
+  }
+
+  public function getArticle($id) {
+    return $this->call($this->hailBaseURI . 'api/v1/articles/' . $id);
   }
 
   // TODO:
