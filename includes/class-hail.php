@@ -176,6 +176,14 @@ class Hail {
 
 		$this->loader->add_action('admin_init', $plugin_admin, 'options_update');
 
+		// $this->loader->add_filter('page_attributes_dropdown_pages_args', $plugin_admin, 'register_project_templates');
+		// $this->loader->add_filter('wp_insert_post_data', $plugin_admin, 'register_project_templates');
+		$this->loader->add_filter('template_include', $plugin_admin, 'view_project_template');
+
+		// add the custom post type for storing Hail articles
+
+		$this->loader->add_action('init', $plugin_admin, 'create_post_type');
+
 	}
 
 	/**

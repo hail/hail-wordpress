@@ -30,7 +30,9 @@ class Hail_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-
+		if (!wp_next_scheduled('hail_cron')) {
+			wp_schedule_event(time(), 'hourly', 'hail_cron');
+		}
 	}
 
 }

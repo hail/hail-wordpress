@@ -56,6 +56,10 @@ class Hail_Admin {
 
 		$this->helper = new Hail_Helper($plugin_name);
 
+		// $this->templates = array(
+		// 	'templates/hail-test-template.php' => 'Hail Test Template'
+		// );
+
 	}
 
 	/**
@@ -130,18 +134,6 @@ class Hail_Admin {
 		);
 	}
 
-	// public function add_action_links( $links ) {
-	//
-  //   /*
-  //   *  Documentation : https://codex.wordpress.org/Plugin_API/Filter_Reference/plugin_action_links_(plugin_file_name)
-  //   */
-	//
-	// 	$settings_link = array(
-	// 		'<a href="' . admin_url( 'options-general.php?page=' . $this->plugin_name ) . '">' . __('Settings', $this->plugin_name) . '</a>',
-	// 	);
-	// 	return array_merge(  $settings_link, $links );
-	//
-	// }
 
 	public function display_plugin_setup_page() {
     include_once( 'partials/hail-admin-display.php' );
@@ -157,10 +149,87 @@ class Hail_Admin {
 
 		$valid['client_id'] = esc_attr($input['client_id']);
 		$valid['client_secret'] = esc_attr($input['client_secret']);
-
     $valid['enable_redis'] = (isset($input['enable_redis']) && !empty($input['enable_redis'])) ? 1 : 0;
+		$valid['primary_ptag'] = esc_attr($input['primary_ptag']);
 
     return $valid;
- }
+	}
+
+	// create the custom post type for storing Hail articles
+
+	public function create_post_type() {
+
+		// TODO:
+		// https://codex.wordpress.org/Function_Reference/register_post_type
+		// specify capabilities
+		// specify post formats? https://codex.wordpress.org/Post_Formats
+		// taxonomies?
+		//
+
+		// some of these are defaults
+		register_post_type(
+			'hail_article',
+			array(
+				'labels' => array(
+					'name' => __('Hail Articles'),
+					'singular_name' => __('Hail Article')
+				),
+				'public' => true,
+				'show_ui' => true,
+				'show_in_nav_menus' => false,
+				'hierarchical' => false,
+				'supports' => array(
+					'title', 'author'
+				),
+				'taxonomies' => array(
+					'post_tag'
+				),
+				'has_archive' => false,
+				'can_export' => false
+			)
+		);
+
+	}
+
+
+	/**
+	 * Checks if the template is assigned to the page
+	 */
+	public function view_project_template( $template ) {
+
+		global $post;
+
+		if (!$post || is_search()) return $template;
+
+		if ($post->post_type == 'hail_article') {
+			return plugin_dir_path(__FILE__) . 'templates/hail-test-template.php';
+		}
+
+		// error_log(var_export($post, true));
+		//
+		// if (
+		// 	!isset(
+		// 		$this->templates[
+		// 			get_post_meta($post->ID, '_wp_page_template', true)
+		// 		]
+		// 	)
+		// ) {
+		// 	return $template;
+		// }
+		//
+		// $file = plugin_dir_path(__FILE__) . get_post_meta(
+		// 	$post->ID, '_wp_page_template', true
+		// );
+
+		// Just to be safe, we check if the file exist first
+		// if (file_exists($file)) {
+		// 	return $file;
+		// } else {
+		// 	echo $file;
+		// }
+
+		return $template;
+
+	}
 
 }

@@ -12,6 +12,14 @@
 * @subpackage Hail/admin/partials
 */
 
+$test_result = null;
+if (isset($_GET['action'])) {
+  if ($_GET['action'] == 'import') {
+    $json = $this->helper->import();
+
+  }
+}
+
 ?>
 
 <div class="wrap">
@@ -20,30 +28,65 @@
 
   <?php
 
-  $test_result = null;
-  if (isset($_GET['action'])) {
-    if ($_GET['action'] == 'test') {
-      $json = $this->helper->test();
+  $predis_test = $this->helper->predis ? true : false;
 
-      if ($json['id']) {
-        $test_result = true;
-      } else {
-        $test_result = false;
-      }
+  $test_result = null;
+  // TODO: also account for manual testing?
+  // manual testing confirms existance of private tag?
+
+  try {
+
+    $json = $this->helper->test();
+    if ($json['id']) {
+      $test_result = true;
+    } else {
+      $test_result = false;
     }
+
+  } catch (Exception $e) {
+
+    // set the test result to the error message?
+    $test_result = false;
+
   }
 
   if (!is_null($test_result)) {
     if ($test_result) {
       ?>
-      <div class="updated"><p>Test successful</p></div>
+      <!-- <div class="updated"><p>cred test success</p></div> -->
       <?php
     } else {
       ?>
-      <div class="error"><p>Test failed, try reauthorizing</p></div>
+      <!-- <div class="error"><p>cred test failed</p></div> -->
       <?php
     }
   }
+
+
+  // $test_result = null;
+  // if (isset($_GET['action'])) {
+  //   if ($_GET['action'] == 'test') {
+  //     $json = $this->helper->test();
+  //
+  //     if ($json['id']) {
+  //       $test_result = true;
+  //     } else {
+  //       $test_result = false;
+  //     }
+  //   }
+  // }
+  //
+  // if (!is_null($test_result)) {
+  //   if ($test_result) {
+  //
+  //     <div class="updated"><p>Test successful</p></div>
+  //
+  //   } else {
+  //
+  //     <div class="error"><p>Test failed, try reauthorizing</p></div>
+  //
+  //   }
+  // }
 
   ?>
 
@@ -80,11 +123,14 @@
           add_option('hail-expires', $access_token->getExpires());
         }
 
+        $this->helper->toAdminUrlDefault();
+
       }
 
       $client_id = $this->helper->getClientId();
       $client_secret = $this->helper->getClientSecret();
       $redis_enabled = $this->helper->getRedisEnabled();
+      $primary_ptag = $this->helper->getPrimaryPtag();
 
       $authorisation_url = $this->helper->getAuthorizationUrl();
 
@@ -95,6 +141,14 @@
           'nonce' => $hail_test_nonce
         ),
         admin_url('admin.php?page=' . $this->plugin_name)
+      );
+
+      $hail_import_nonce = wp_create_nonce('hail-test');
+      $hail_import_url = add_query_arg(
+        array(
+          'action' => 'import',
+          'nonce' => $hail_import_nonce
+        )
       );
 
     ?>
@@ -116,8 +170,19 @@
       </label>
     </fieldset>
 
+    <!-- Tags and stuff -->
+    <fieldset>
+      <legend class="screen-reader-text"><span>Primary Private Tag ID</span></legend>
+      <label for="<?php echo $this->plugin_name;?>-primary_ptag">
+        <input type="text" class="<?php echo $this->plugin_name;?>-primary_ptag" id="<?php echo $this->plugin_name;?>-primary_ptag" name="<?php echo $this->plugin_name;?>[primary_ptag]" value="<?php echo $primary_ptag;?>" />
+        <span>Primary Private Tag ID</span>
+      </label>
+    </fieldset>
 
     <!-- REDIS -->
+    <?php
+    if ($predis_test) {
+    ?>
     <fieldset>
       <legend class="screen-reader-text"><span>Enable Redis caching</span></legend>
       <label for="<?php echo $this->plugin_name; ?>-enable_redis">
@@ -125,10 +190,20 @@
         <span><?php esc_attr_e('Enable Redis caching', $this->plugin_name); ?></span>
       </label>
     </fieldset>
+    <?php
+    }
+    ?>
 
-    <a class="button-primary" href="<?php echo $authorisation_url; ?>">Authorise</a>
+    <?php
+    if ($client_id && $client_secret) { ?>
+      <a class="button-primary" href="<?php echo $authorisation_url; ?>">Authorise</a>
+    <?php } ?>
 
-    <a class="button-primary" href="<?php echo $hail_test_url; ?>">Test</a>
+    <?php
+    if ($test_result && $primary_ptag) { ?>
+      <a class="button-primary" href="<?php echo $hail_test_url; ?>">Test</a>
+      <a class="button-primary" href="<?php echo $hail_import_url; ?>">Import</a>
+    <?php } ?>
 
     <?php submit_button('Save all changes', 'primary', 'submit', TRUE); ?>
 
