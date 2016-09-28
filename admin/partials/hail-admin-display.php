@@ -195,7 +195,7 @@ if (isset($_GET['action'])) {
     ?>
 
     <?php
-    if ($client_id && $client_secret) { ?>
+    if ($client_id && $client_secret && $primary_ptag) { ?>
       <a class="button-primary" href="<?php echo $authorisation_url; ?>">Authorise</a>
     <?php } ?>
 

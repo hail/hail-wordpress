@@ -52,6 +52,8 @@ class Hail_Public {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
+		$this->helper = Hail_Helper::getInstance();
+
 	}
 
 	/**
@@ -97,6 +99,124 @@ class Hail_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/hail-public.js', array( 'jquery' ), $this->version, false );
+
+	}
+
+	public function hail_shortcode($attrs) {
+
+		// Default attributes
+		$attrs = shortcode_atts( array(
+
+			'hail_tag' 				=> false,
+
+			// 'display_types'   => true,
+			// 'display_tags'    => true,
+			// 'display_content' => true,
+			// 'display_author'  => false,
+			// 'show_filter'     => false,
+			// 'include_type'    => false,
+			// 'include_tag'     => false,
+			'display_hero'	  => false,
+			'display_content' => true,
+			'columns'         => 2,
+			'showposts'       => -1,
+			'order'           => 'asc',
+			'orderby'         => 'date',
+		), $attrs, 'hail_content' );
+
+		// TODO: sanitization (copy from jetpack portfolio_shortcode function)
+		// order and order by sanitization
+
+		if ($attrs['hail_tag']) {
+			$attrs['hail_tag'] = explode(',', str_replace(' ', '', $attrs['hail_tag']));
+		}
+
+		if ($attrs['display_hero'] && 'true' != $attrs['display_hero']) {
+			$attrs['display_hero'] = false;
+		}
+
+		if ($attrs['display_content'] && 'true' != $attrs['display_content'] && 'full' != $attrs['display_content']) {
+			$attrs['display_content'] = false;
+		}
+
+		$attrs['columns'] = absint($attrs['columns']);
+
+		$attrs['showposts'] = intval($attrs['showposts']);
+
+		if ($attrs['order']) {
+			$attrs['order'] = urldecode($attrs['order']);
+			$attrs['order'] = strtoupper($attrs['order']);
+			if ($attrs['order'] != 'DESC') {
+				$attrs['order'] = 'ASC';
+			}
+		}
+
+		if ($attrs['orderby']) {
+			$attrs['orderby'] = urldecode($attrs['orderby']);
+			$attrs['orderby'] = strtolower($attrs['orderby']);
+			$allowed_keys = array('author', 'date', 'title', 'rand');
+
+			$parsed = array();
+			foreach (explode(',', $attrs['orderby']) as $hail_index_number => $orderby) {
+				if (!in_array($orderby, $allowed_keys)) {
+					continue;
+				}
+				$parsed[] = $orderby;
+			}
+
+			if (empty($parsed)) {
+				unset($attrs['orderby']);
+			} else {
+				$attrs['orderby'] = implode(' ', $parsed);
+			}
+		}
+
+		// add custom styles for this shortcode
+		// error_log('** ' . plugins_url() . ' **');
+		// wp_enqueue_style('hail-shortcode-style', plugins_url(''))
+
+		return $this->helper->shortcodeHTML($attrs);
+
+	}
+
+
+	/**
+	 * Checks if the template is assigned to the page
+	 */
+	public function view_project_template( $template ) {
+
+		global $post;
+
+		if (!$post || is_search()) return $template;
+
+		if ($post->post_type == 'hail_article') {
+			return plugin_dir_path(__FILE__) . 'templates/hail-test-template.php';
+		}
+
+		// error_log(var_export($post, true));
+		//
+		// if (
+		// 	!isset(
+		// 		$this->templates[
+		// 			get_post_meta($post->ID, '_wp_page_template', true)
+		// 		]
+		// 	)
+		// ) {
+		// 	return $template;
+		// }
+		//
+		// $file = plugin_dir_path(__FILE__) . get_post_meta(
+		// 	$post->ID, '_wp_page_template', true
+		// );
+
+		// Just to be safe, we check if the file exist first
+		// if (file_exists($file)) {
+		// 	return $file;
+		// } else {
+		// 	echo $file;
+		// }
+
+		return $template;
 
 	}
 

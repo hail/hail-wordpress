@@ -54,7 +54,9 @@ class Hail_Admin {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
-		$this->helper = new Hail_Helper($plugin_name);
+		// $this->helper = new Hail_Helper($plugin_name);
+		$this->helper = Hail_Helper::getInstance();
+
 
 		// $this->templates = array(
 		// 	'templates/hail-test-template.php' => 'Hail Test Template'
@@ -155,8 +157,47 @@ class Hail_Admin {
     return $valid;
 	}
 
-	// create the custom post type for storing Hail articles
+	// create the custom taxonomy for Hail tags
+	public function create_taxonomy() {
 
+		$labels = array(
+			'name'                       => _x( 'Hail Tags', 'taxonomy general name', 'textdomain' ),
+			'singular_name'              => _x( 'Hail Tag', 'taxonomy singular name', 'textdomain' ),
+			'search_items'               => __( 'Search Hail Tags', 'textdomain' ),
+			'popular_items'              => __( 'Popular Hail Tags', 'textdomain' ),
+			'all_items'                  => __( 'All Hail Tags', 'textdomain' ),
+			'parent_item'                => null,
+			'parent_item_colon'          => null,
+			'edit_item'                  => __( 'Edit Hail Tag', 'textdomain' ),
+			'update_item'                => __( 'Update Hail Tag', 'textdomain' ),
+			'add_new_item'               => __( 'Add New Hail Tag', 'textdomain' ),
+			'new_item_name'              => __( 'New Hail Tag Name', 'textdomain' ),
+			'separate_items_with_commas' => __( 'Separate tags with commas', 'textdomain' ),
+			'add_or_remove_items'        => __( 'Add or remove Hail Tags', 'textdomain' ),
+			'choose_from_most_used'      => __( 'Choose from the most used Hail Tags', 'textdomain' ),
+			'not_found'                  => __( 'No Hail Tags found.', 'textdomain' ),
+			'menu_name'                  => __( 'Hail Tags', 'textdomain' ),
+		);
+
+		$args = array(
+			'hierarchical'      => false,
+			'labels'            => $labels,
+			'show_ui'           => true,
+			'show_admin_column' => true,
+			'query_var'         => true,
+			'rewrite'           => array('slug' => 'hail_tag'),
+		);
+
+		register_taxonomy(
+			'hail_tag',
+			array('hail_article'),
+			$args
+		);
+
+	}
+
+
+	// create the custom post type for storing Hail articles
 	public function create_post_type() {
 
 		// TODO:
@@ -179,10 +220,10 @@ class Hail_Admin {
 				'show_in_nav_menus' => false,
 				'hierarchical' => false,
 				'supports' => array(
-					'title', 'author'
+					'title'
 				),
 				'taxonomies' => array(
-					'post_tag'
+					'hail_tag'
 				),
 				'has_archive' => false,
 				'can_export' => false
@@ -192,44 +233,11 @@ class Hail_Admin {
 	}
 
 
-	/**
-	 * Checks if the template is assigned to the page
-	 */
-	public function view_project_template( $template ) {
+	public function hail_import() {
 
-		global $post;
-
-		if (!$post || is_search()) return $template;
-
-		if ($post->post_type == 'hail_article') {
-			return plugin_dir_path(__FILE__) . 'templates/hail-test-template.php';
-		}
-
-		// error_log(var_export($post, true));
-		//
-		// if (
-		// 	!isset(
-		// 		$this->templates[
-		// 			get_post_meta($post->ID, '_wp_page_template', true)
-		// 		]
-		// 	)
-		// ) {
-		// 	return $template;
-		// }
-		//
-		// $file = plugin_dir_path(__FILE__) . get_post_meta(
-		// 	$post->ID, '_wp_page_template', true
-		// );
-
-		// Just to be safe, we check if the file exist first
-		// if (file_exists($file)) {
-		// 	return $file;
-		// } else {
-		// 	echo $file;
-		// }
-
-		return $template;
+		$this->helper->import();
 
 	}
+
 
 }

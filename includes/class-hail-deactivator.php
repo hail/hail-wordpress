@@ -30,7 +30,9 @@ class Hail_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
+		if (wp_next_scheduled('hail_cron')) {
+			wp_clear_scheduled_hook('hail_cron_import');
+		}
 	}
 
 }

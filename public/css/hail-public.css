@@ -2,3 +2,112 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+
+/* Shortcode styles */
+.hail-shortcode {
+	clear: both;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+}
+
+.hail-entry {
+	float: left;
+	margin: 0 0 3em;
+	padding: 0;
+	width: 100%;
+}
+
+/* Column setting */
+.hail-entry-column-1 {
+	width: 100%;
+}
+
+.hail-entry-column-2 {
+	margin-right: 4%;
+	width: 48%;
+}
+
+.hail-entry-column-3 {
+	margin-right: 3.5%;
+	width: 31%;
+}
+
+.hail-entry-column-4 {
+	margin-right: 3%;
+	width: 22%;
+}
+
+.hail-entry-column-5 {
+	margin-right: 2.5%;
+	width: 18%;
+}
+
+.hail-entry-column-6 {
+	margin-right: 2%;
+	width: 15%;
+}
+.hail-entry-first-item-row {
+	clear: both;
+}
+.hail-entry-last-item-row {
+	margin-right: 0;
+}
+
+@media screen and (max-width:768px) {
+	.hail-entry-mobile-first-item-row{
+		margin-right: 4%;
+		width: 48%;
+		clear:both;
+	}
+	.hail-entry-first-item-row {
+		clear:none;
+	}
+	.hail-entry-mobile-last-item-row{
+		width: 48%;
+		margin-right: 0;
+	}
+}
+/* Entry Header */
+.hail-entry-header {
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.hail-featured-image {
+	margin: 0;
+	padding: 0;
+}
+
+.hail-featured-image img {
+	border: 0;
+	height: auto;
+	max-width: 100%;
+	vertical-align: middle;
+}
+
+.hail-entry-title {
+	font-weight: 700;
+	margin: 0;
+	padding: 0;
+}
+
+.hail-featured-image + .hail-entry-title {
+	margin-top: 1.0em;
+}
+
+.hail-entry-title a {
+	border: 0;
+	text-decoration: none;
+}
+
+/* Entry Content */
+.hail-entry-content {
+	margin: 0.75em 0 0;
+	padding: 0;
+}
+
+.hail-entry-content > :last-child {
+	margin: 0;
+}

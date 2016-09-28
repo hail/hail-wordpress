@@ -178,11 +178,17 @@ class Hail {
 
 		// $this->loader->add_filter('page_attributes_dropdown_pages_args', $plugin_admin, 'register_project_templates');
 		// $this->loader->add_filter('wp_insert_post_data', $plugin_admin, 'register_project_templates');
-		$this->loader->add_filter('template_include', $plugin_admin, 'view_project_template');
+		// $this->loader->add_filter('template_include', $plugin_admin, 'view_project_template');
 
+		// add the custom taxonomy for Hail tags
+		$this->loader->add_action('init', $plugin_admin, 'create_taxonomy');
 		// add the custom post type for storing Hail articles
-
 		$this->loader->add_action('init', $plugin_admin, 'create_post_type');
+
+		// the cron action for Hail import
+		$this->loader->add_action('hail_cron_import', $plugin_admin, 'hail_import');
+
+		// $this->loader->add_shortcode('hail_content', $plugin_admin, 'hail_shortcode');
 
 	}
 
@@ -202,6 +208,10 @@ class Hail {
 
 		// testing public hooks
 		// $this->loader->add_action('plugins_loaded', $plugin_public, 'plugins_loaded');
+
+		$this->loader->add_filter('template_include', $plugin_public, 'view_project_template');
+
+		$this->loader->add_shortcode('hail_content', $plugin_public, 'hail_shortcode');
 
 	}
 

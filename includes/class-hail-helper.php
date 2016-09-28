@@ -41,7 +41,7 @@ class Hail_Helper {
 
     $this->predis = new Predis\Client();
 
-    error_log('testing for redis');
+    // error_log('testing for redis');
     try {
       $this->predis->ping();
     } catch (Predis\Connection\ConnectionException $e) {
@@ -335,9 +335,14 @@ class Hail_Helper {
         update_post_meta($existing_id, 'body', $article['body']);
         update_post_meta($existing_id, 'date', $article['date']);
         update_post_meta($existing_id, 'updated_date', $article['updated_date']);
+        if ($hero_url) {
+          update_post_meta($existing_id, 'hero_url', $hero_url);
+        } else {
+          delete_post_meta($existing_id, 'hero_url');
+        }
 
         // update the post_tags
-        wp_set_object_terms($existing_id, $ptags, 'post_tag');
+        wp_set_object_terms($existing_id, $ptags, 'hail_tag');
 
       } else {
 
@@ -353,7 +358,7 @@ class Hail_Helper {
           if ($hero_url) add_post_meta($id, 'hero_url', $hero_url);
 
           // add the Hail tags as post_tags
-          wp_set_object_terms($id, $ptags, 'post_tag');
+          wp_set_object_terms($id, $ptags, 'hail_tag');
         } else {
           throw new Exception('Wordpress post for Hail article was not created.');
         }
@@ -394,6 +399,134 @@ class Hail_Helper {
     return;
 
 
+  }
+
+  private static function shortcodeQuery($attrs) {
+
+    $default = array(
+      'order' => $attrs['order'],
+      'orderby' => $attrs['orderby'],
+      'posts_per_page' => $attrs['showposts'],
+    );
+
+    $args = wp_parse_args($attrs, $default);
+    $args['post_type'] = 'hail_article';
+
+    if ($attrs['hail_tag'] != false) {
+      $args['tax_query'] = array();
+
+      array_push($args['tax_query'], array(
+        'taxonomy' => 'hail_tag',
+        'field'    => 'slug',
+        'terms'    => $attrs['hail_tag']
+      ));
+    }
+
+    $query = new WP_Query($args);
+
+    return $query;
+
+  }
+
+  public static function shortcodeHTML($attrs) {
+
+    $query = self::shortcodeQuery($attrs);
+    $hail_index_number = 0;
+
+    // output buffering?
+    ob_start();
+
+    if ($query->have_posts()) {
+
+      ?>
+      <div class="hail-shortcode column-<?php echo esc_attr($attrs['columns']); ?>">
+      <?php
+
+      while ($query->have_posts()) {
+        $query->the_post();
+        $post_id = get_the_ID();
+        ?>
+
+        <div class="hail-entry <?php echo esc_attr( self::get_article_class( $hail_index_number, $attrs['columns'] ) ); ?>">
+          <header class="hail-entry-header">
+            <?php
+            if ($attrs['display_hero']) {
+              echo self::get_hero_image($post_id);
+            }
+            ?>
+
+            <h2 class="hail-entry-title"><a href="<?php echo esc_url(get_permalink()); ?>" title="<?php echo esc_attr(the_title_attribute()); ?>"><?php the_title(); ?></a></h2>
+
+          </header>
+
+          <?php
+          if ($attrs['display_content'] !== false) {
+            if ($attrs['display_content'] === 'full') {
+              ?>
+              <div class="hail-entry-content"><?php the_content(); ?></div>
+              <?php
+            } else {
+              ?>
+              <div class="hail-entry-content"><?php the_excerpt(); ?></div>
+              <?php
+            }
+          }
+          ?>
+
+        </div><!-- /.hail-entry -->
+        <?php $hail_index_number++;
+      } // end of while loop
+
+      wp_reset_postdata();
+      ?>
+      </div><!-- /.hail-shortcode -->
+    <?php
+    } else { ?>
+      <p><em>There were no entries found</em></p>
+    <?php
+    }
+
+    $html = ob_get_clean();
+
+    // if there's a hail shortcode in the HTML then remove it
+    if (has_shortcode($html, 'hail_content')) {
+      remove_shortcode('hail_content');
+    }
+
+    return $html;
+
+  }
+
+  private static function get_article_class($hail_index_number, $columns) {
+
+    $class = array();
+
+    $class[] = 'hail-entry-column-' . $columns;
+
+    if ($columns > 1) {
+      if (($hail_index_number % 2) == 0) {
+        $class[] = 'hail-entry-mobile-first-item-row';
+      } else {
+        $class[] = 'hail-entry-mobile-last-item-row';
+      }
+    }
+
+    if (($hail_index_number % $columns) == 0) {
+      $class[] = 'hail-entry-first-item-row';
+    } elseif (($hail_index_number % $columns) == ($columns - 1)) {
+      $class[] = 'hail-entry-last-item-row';
+    }
+
+    return implode(' ', $class);
+
+  }
+
+  private static function get_hero_image($post_id) {
+    $url = get_post_meta($post_id, 'hero_url', true);
+
+    if ($url) {
+      return '<a class="hail-featured-image" href="' . esc_url(get_permalink($post_id)) . '">' . '<img src="' . $url . '"></a>';
+    }
   }
 
 }
