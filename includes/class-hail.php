@@ -176,19 +176,29 @@ class Hail {
 
 		$this->loader->add_action('admin_init', $plugin_admin, 'options_update');
 
-		// $this->loader->add_filter('page_attributes_dropdown_pages_args', $plugin_admin, 'register_project_templates');
-		// $this->loader->add_filter('wp_insert_post_data', $plugin_admin, 'register_project_templates');
-		// $this->loader->add_filter('template_include', $plugin_admin, 'view_project_template');
-
 		// add the custom taxonomy for Hail tags
 		$this->loader->add_action('init', $plugin_admin, 'create_taxonomy');
+
 		// add the custom post type for storing Hail articles
 		$this->loader->add_action('init', $plugin_admin, 'create_post_type');
+
+		// configure permissions for the custom post type
+		$this->loader->add_action('admin_init', $plugin_admin, 'configure_cpt_roles', 999);
 
 		// the cron action for Hail import
 		$this->loader->add_action('hail_cron_import', $plugin_admin, 'hail_import');
 
 		// $this->loader->add_shortcode('hail_content', $plugin_admin, 'hail_shortcode');
+
+		// hide the meta boxes for our CPT
+		// only hides the publish box on single edit
+		$this->loader->add_action('admin_menu', $plugin_admin, 'hide_meta_boxes');
+
+		// removes the inline edit section for our CPT
+		$this->loader->add_filter('post_row_actions', $plugin_admin, 'remove_row_actions', 10, 2);
+
+		// removes the bulk actions edit thing
+		$this->loader->add_filter('bulk_actions-edit-hail_article', $plugin_admin, 'remove_bulk_actions');
 
 	}
 
@@ -209,7 +219,9 @@ class Hail {
 		// testing public hooks
 		// $this->loader->add_action('plugins_loaded', $plugin_public, 'plugins_loaded');
 
-		$this->loader->add_filter('template_include', $plugin_public, 'view_project_template');
+		// this doesn't seem to work in production, possibly to do with symlinked paths.
+		// changing to require the template to be inserted into the theme.
+		// $this->loader->add_filter('template_include', $plugin_public, 'view_project_template');
 
 		$this->loader->add_shortcode('hail_content', $plugin_public, 'hail_shortcode');
 

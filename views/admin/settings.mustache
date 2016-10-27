@@ -1,0 +1,64 @@
+<div class="wrap">
+
+  <h2>{{title}}</h2>
+
+  <div class="{{test_class}}"><p>{{test_text}}</p></div>
+
+  {{#import_results}}
+  <div class="updated"><p>Import successful. {{import_results}}</p></div>
+  {{/import_results}}
+
+  <form method="post" name="setup-options" action="options.php">
+
+    <input type='hidden' name='option_page' value='{{plugin_name}}' />
+    <input type="hidden" name="action" value="update" />
+    {{{settings_nonce}}}
+
+    <fieldset>
+      <legend class="screen-reader-text"><span>Client ID</span></legend>
+      <label for="{{plugin_name}}-client_id">
+          <input type="text" class="{{plugin_name}}-client_id" id="{{plugin-name}}-client_id" name="{{plugin_name}}[client_id]"  value="{{client_id}}"  />
+          <span>Client ID</span>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend class="screen-reader-text"><span>Client Secret</span></legend>
+      <label for="{{plugin_name}}-client_secret">
+          <input type="text" class="{{plugin_name}}-client_secret" id="{{plugin_name}}-client_secret" name="{{plugin_name}}[client_secret]"  value="{{client_secret}}"  />
+          <span>Client secret</span>
+      </label>
+    </fieldset>
+
+    <!-- Tags and stuff -->
+    <fieldset>
+      <legend class="screen-reader-text"><span>Primary Private Tag ID</span></legend>
+      <label for="{{plugin_name}}-primary_ptag">
+        <input type="text" class="{{plugin_name}}-primary_ptag" id="{{plugin_name}}-primary_ptag" name="{{plugin_name}}[primary_ptag]" value="{{primary_ptag}}" />
+        <span>Primary private tag ID</span>
+      </label>
+    </fieldset>
+
+    <!-- REDIS -->
+    <!-- if has predis -->
+    <!-- <fieldset>
+      <legend class="screen-reader-text"><span>Enable Redis caching</span></legend>
+      <label for="{{plugin_name}}-enable_redis">
+        <input type="checkbox" id="{{plugin_name}}-redis_enabled" name="{{plugin_name}}[redis_enabled]" value="1" {{redis_checked}} />
+        <span>Enable Redis caching for API call results</span>
+      </label>
+    </fieldset> -->
+
+    <br />
+
+    <!-- mustache conditional? -->
+    <a class="button-primary" href="{{authorization_url}}">Authorise</a>
+
+    <!-- if ptag test successful -->
+    <a class="button-primary" href="{{hail_import_url}}">Import</a>
+
+    {{{submit_button}}}
+
+  </form>
+
+</div>

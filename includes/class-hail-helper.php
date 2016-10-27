@@ -39,14 +39,15 @@ class Hail_Helper {
     //   )
     // );
 
-    $this->predis = new Predis\Client();
+    // $this->predis = new Predis\Client();
+    $this->predis = false;
 
     // error_log('testing for redis');
-    try {
-      $this->predis->ping();
-    } catch (Predis\Connection\ConnectionException $e) {
-      $this->predis = false;
-    }
+    // try {
+    //   $this->predis->ping();
+    // } catch (Predis\Connection\ConnectionException $e) {
+    //   $this->predis = false;
+    // }
 
   }
 
@@ -98,27 +99,33 @@ class Hail_Helper {
     // }
   }
 
-  public function getClientID() {
+  public function getConfigClientID() {
     return array_key_exists('client_id', $this->config) ? $this->config['client_id'] : '';
   }
 
-  public function getClientSecret() {
+  public function getConfigClientSecret() {
     return array_key_exists('client_secret', $this->config) ? $this->config['client_secret'] : '';
   }
 
-  public function getRedisEnabled() {
-    return array_key_exists('redis_enabled', $this->config) ? $this->config['redis_enabled'] : 0;
-  }
+  // public function getConfigRedisEnabled() {
+  //   return array_key_exists('redis_enabled', $this->config) ? $this->config['redis_enabled'] : 0;
+  // }
 
-  public function getPrimaryPtag() {
+  public function getConfigPrimaryPtag() {
     return array_key_exists('primary_ptag', $this->config) ? $this->config['primary_ptag'] : '';
   }
 
   public function getAuthorizationUrl() {
+    if (!$this->provider) {
+      $this->initProvider();
+    }
     return $this->provider ? $this->provider->getAuthorizationUrl() : null;
   }
 
   public function getAccessToken($type, $data) {
+    if (!$this->provider) {
+      $this->initProvider();
+    }
     return $this->provider ? $this->provider->getAccessToken($type, $data) : null;
   }
 
@@ -126,6 +133,9 @@ class Hail_Helper {
 
   // always a GET call
   private function call($url, $cache = true) {
+    $url = $this->hailBaseURI . $url;
+
+    error_log($url);
 
     if (!$this->predis) $cache = false;
 
@@ -144,14 +154,14 @@ class Hail_Helper {
     // if matched then return cached results
     // if not matched then proceed to make request and then store result against hash
 
-    if ($cache) {
-      $hash = sha1($url);
-      $cached_result_body = $this->predis->get($hash);
-
-      if ($cached_result_body) {
-        return json_decode($cached_result_body, true);
-      }
-    }
+    // if ($cache) {
+    //   $hash = sha1($url);
+    //   $cached_result_body = $this->predis->get($hash);
+    //
+    //   if ($cached_result_body) {
+    //     return json_decode($cached_result_body, true);
+    //   }
+    // }
 
 
     $access_token = get_option('hail-access_token');
@@ -200,37 +210,82 @@ class Hail_Helper {
 
     $json = json_decode($result_body, true);
 
-    if ($cache) {
-      $this->predis->set($hash, $result_body, 'ex', 60);
-    }
+    // if ($cache) {
+    //   $this->predis->set($hash, $result_body, 'ex', 60);
+    // }
 
     return $json;
   }
 
-  public function test() {
-    return $this->call($this->hailBaseURI . 'api/v1/me', false);
+  public function updateToken($code) {
+
+    $access_token = $this->getAccessToken('authorization_code', [
+      'code' => $code
+    ]);
+
+    // TODO: combine these into the same option set?
+
+    // update the tokens if necessary
+    if (get_option('hail-access_token') !== false) {
+      update_option('hail-access_token', $access_token->getToken());
+    } else {
+      add_option('hail-access_token', $access_token->getToken());
+    }
+
+    if (get_option('hail-refresh_token') !== false) {
+      update_option('hail-refresh_token', $access_token->getRefreshToken());
+    } else {
+      add_option('hail-refresh_token', $access_token->getRefreshToken());
+    }
+
+    if (get_option('hail-expires') !== false) {
+      update_option('hail-expires', $access_token->getExpires());
+    } else {
+      add_option('hail-expires', $access_token->getExpires());
+    }
+
+    $this->toAdminUrlDefault();
+
+  }
+
+  public function testMe() {
+    try {
+      $result = $this->call('api/v1/me', false);
+      return true;
+    } catch (Exception $e) {
+      return false;
+    }
+  }
+
+  public function testPtag($id) {
+    try {
+      $result = $this->call('api/v1/private-tags/' . $id, false);
+      return true;
+    } catch (Exception $e) {
+      return false;
+    }
   }
 
   public function getArticle($id) {
-    return $this->call($this->hailBaseURI . 'api/v1/articles/' . $id);
+    return $this->call('api/v1/articles/' . $id);
   }
 
   public function getArticlesByPrivateTag($id, $cache = true) {
     // https://dev.hail.to/api/v1/private-tags/58kHKvj/articles?limit=50&order=date%7Cdesc&offset=0
-    return $this->call($this->hailBaseURI . 'api/v1/private-tags/' . $id . '/articles', $cache);
+    return $this->call('api/v1/private-tags/' . $id . '/articles', $cache);
   }
 
   public function getArticleImages($id, $cache = true) {
-    return $this->call($this->hailBaseURI . 'api/v1/articles/' . $id . '/images', $cache);
+    return $this->call('api/v1/articles/' . $id . '/images', $cache);
   }
 
   public function getArticleVideos($id, $cache = true) {
-    return $this->call($this->hailBaseURI . 'api/v1/articles/' . $id . '/videos', $cache);
+    return $this->call('api/v1/articles/' . $id . '/videos', $cache);
   }
 
 
   public function import($cache = false) {
-    $ptag = $this->getPrimaryPtag();
+    $ptag = $this->getConfigPrimaryPtag();
 
     $data = $this->getArticlesByPrivateTag($ptag, false);
 
@@ -247,11 +302,15 @@ class Hail_Helper {
     $query = new WP_Query($query_args);
     $wp_ids = wp_list_pluck($query->posts, 'hail_id', 'ID');
 
+    $count_new = 0;
+    $count_changed = 0;
+    $count_deleted = 0;
+
     foreach ($data as $article) {
 
-      echo '<pre>';
-      echo 'the hail API gave me an article with id: ' . $article['id'];
-      echo '</pre>';
+      // echo '<pre>';
+      // echo 'the hail API gave me an article with id: ' . $article['id'];
+      // echo '</pre>';
 
       $hail_ids[] = $article['id'];
 
@@ -260,9 +319,9 @@ class Hail_Helper {
         $ptags[] = $ptag['name'];
       }
 
-      echo '<pre>';
-      print_r($ptags);
-      echo '</pre>';
+      // echo '<pre>';
+      // print_r($ptags);
+      // echo '</pre>';
 
       // see if an existing post exists
       $query_args = array(
@@ -302,16 +361,18 @@ class Hail_Helper {
 
 
 
-      if ($existing_id) {
-        echo '<pre>';
-        echo get_post_meta($existing_id, 'updated_date', true) . '<br />';
-        echo $article['updated_date'] . '<br />';
-        echo $has_updated ? 'has updated' : 'has not updated';
-        echo '</pre>';
-      }
+      // if ($existing_id) {
+        // echo '<pre>';
+        // echo get_post_meta($existing_id, 'updated_date', true) . '<br />';
+        // echo $article['updated_date'] . '<br />';
+        // echo $has_updated ? 'has updated' : 'has not updated';
+        // echo '</pre>';
+      // }
 
+
+      // don't do anything if the article already exists in WP and hasn't been updated in Hail
       if ($existing_id && !$has_updated) {
-        echo '<pre>continuing</pre>';
+        // echo '<pre>continuing</pre>';
         continue;
       }
 
@@ -330,7 +391,7 @@ class Hail_Helper {
 
       if ($has_updated) {
 
-        echo '<pre>updating existing post</pre>';
+        // echo '<pre>updating existing post</pre>';
         update_post_meta($existing_id, 'lead', $article['lead']);
         update_post_meta($existing_id, 'body', $article['body']);
         update_post_meta($existing_id, 'date', $article['date']);
@@ -344,9 +405,12 @@ class Hail_Helper {
         // update the post_tags
         wp_set_object_terms($existing_id, $ptags, 'hail_tag');
 
+        $count_changed++;
+
+
       } else {
 
-        echo '<pre>creating new post</pre>';
+        // echo '<pre>creating new post</pre>';
 
         $id = wp_insert_post(add_magic_quotes($post));
         if ($id) {
@@ -359,6 +423,7 @@ class Hail_Helper {
 
           // add the Hail tags as post_tags
           wp_set_object_terms($id, $ptags, 'hail_tag');
+          $count_new++;
         } else {
           throw new Exception('Wordpress post for Hail article was not created.');
         }
@@ -383,10 +448,11 @@ class Hail_Helper {
 
 
     foreach ($to_delete as $wp_id) {
-      echo '<pre>';
-      echo 'deleting ' . $wp_id;
-      echo '</pre>';
+      // echo '<pre>';
+      // echo 'deleting ' . $wp_id;
+      // echo '</pre>';
       wp_delete_post($wp_id, true); // true for force delete (bypass trash)
+      $count_deleted++;
     }
 
 
@@ -395,9 +461,9 @@ class Hail_Helper {
     // print_r(array_diff($wp_ids, $hail_ids));
     // echo '</pre>';
 
-
-    return;
-
+    return array(
+      $count_new, $count_changed, $count_deleted
+    );
 
   }
 

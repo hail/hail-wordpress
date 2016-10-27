@@ -2,6 +2,7 @@
     "require": {
         "league/oauth2-client": "^1.4",
         "predis/predis": "^1.1",
-        "nesbot/carbon": "^1.21"
+        "nesbot/carbon": "^1.21",
+        "mustache/mustache": "^2.11"
     }
 }

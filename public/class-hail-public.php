@@ -183,41 +183,48 @@ class Hail_Public {
 	/**
 	 * Checks if the template is assigned to the page
 	 */
-	public function view_project_template( $template ) {
-
-		global $post;
-
-		if (!$post || is_search()) return $template;
-
-		if ($post->post_type == 'hail_article') {
-			return plugin_dir_path(__FILE__) . 'templates/hail-test-template.php';
-		}
-
-		// error_log(var_export($post, true));
-		//
-		// if (
-		// 	!isset(
-		// 		$this->templates[
-		// 			get_post_meta($post->ID, '_wp_page_template', true)
-		// 		]
-		// 	)
-		// ) {
-		// 	return $template;
-		// }
-		//
-		// $file = plugin_dir_path(__FILE__) . get_post_meta(
-		// 	$post->ID, '_wp_page_template', true
-		// );
-
-		// Just to be safe, we check if the file exist first
-		// if (file_exists($file)) {
-		// 	return $file;
-		// } else {
-		// 	echo $file;
-		// }
-
-		return $template;
-
-	}
+	// public function view_project_template( $template ) {
+	//
+	// 	global $post;
+	//
+	// 	if (!$post || is_search()) return $template;
+	//
+	// 	if ($post->post_type == 'hail_article') {
+	// 		// $plugin_template = plugin_dir_path(__FILE__) . 'templates/hail-test-template.php';
+	// 		$plugin_dir = dirname(__FILE__);
+	//
+	// 		die($plugin_dir . '/templates/hail-test-template.php');
+	//
+	// 		// $plugin_template = plugin_dir_path(__FILE__) . 'templates/hail-test-template.php';
+	//
+	// 		return $plugin_template;
+	// 	}
+	// 
+	// 	// error_log(var_export($post, true));
+	// 	//
+	// 	// if (
+	// 	// 	!isset(
+	// 	// 		$this->templates[
+	// 	// 			get_post_meta($post->ID, '_wp_page_template', true)
+	// 	// 		]
+	// 	// 	)
+	// 	// ) {
+	// 	// 	return $template;
+	// 	// }
+	// 	//
+	// 	// $file = plugin_dir_path(__FILE__) . get_post_meta(
+	// 	// 	$post->ID, '_wp_page_template', true
+	// 	// );
+	//
+	// 	// Just to be safe, we check if the file exist first
+	// 	// if (file_exists($file)) {
+	// 	// 	return $file;
+	// 	// } else {
+	// 	// 	echo $file;
+	// 	// }
+	//
+	// 	return $template;
+	//
+	// }
 
 }

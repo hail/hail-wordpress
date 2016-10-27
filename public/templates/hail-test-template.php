@@ -24,6 +24,8 @@ $hero_url = get_post_meta($post_id, 'hero_url', true);
 
             <article>
 
+              <h1>Hello..</h1>
+
               <?php if ($hero_url) { ?>
 
                 <div class="featured_image">

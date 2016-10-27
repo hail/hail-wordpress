@@ -31,7 +31,7 @@ class Hail_Activator {
 	 */
 	public static function activate() {
 		if (!wp_next_scheduled('hail_cron_import')) {
-			wp_schedule_event(time(), 'hourly', 'hail_cron_import');
+			wp_schedule_event(time(), 'minutes_10', 'hail_cron_import');
 		}
 	}
 
