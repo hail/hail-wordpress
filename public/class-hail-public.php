@@ -3,7 +3,7 @@
 /**
  * The public-facing functionality of the plugin.
  *
- * @link       http://example.com
+ * @link       https://github.com/hail/hail-wordpress
  * @since      1.0.0
  *
  * @package    Hail
@@ -18,7 +18,7 @@
  *
  * @package    Hail
  * @subpackage Hail/public
- * @author     Your Name <email@example.com>
+ * @author     Benjamin Dawson <ben@hail.to>
  */
 class Hail_Public {
 
@@ -199,7 +199,7 @@ class Hail_Public {
 	//
 	// 		return $plugin_template;
 	// 	}
-	// 
+	//
 	// 	// error_log(var_export($post, true));
 	// 	//
 	// 	// if (

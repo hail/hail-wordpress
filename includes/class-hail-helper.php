@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Define the Hail helper functions for OAuth
+ * Define the Hail helper functions for OAuth and accessing the Hail API
  *
- * @link          http://get.hail.to
+ * @link          https://github.com/hail/hail-wordpress
  * @since         1.0.0
  *
  * @package       Hail

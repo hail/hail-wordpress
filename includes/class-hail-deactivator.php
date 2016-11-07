@@ -3,7 +3,7 @@
 /**
  * Fired during plugin deactivation
  *
- * @link       http://example.com
+ * @link       https://github.com/hail/hail-wordpress
  * @since      1.0.0
  *
  * @package    Hail
@@ -18,7 +18,7 @@
  * @since      1.0.0
  * @package    Hail
  * @subpackage Hail/includes
- * @author     Your Name <email@example.com>
+ * @author     Benjamin Dawson <ben@hail.to>
  */
 class Hail_Deactivator {
 

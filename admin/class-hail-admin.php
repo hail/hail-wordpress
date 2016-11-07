@@ -3,7 +3,7 @@
 /**
  * The admin-specific functionality of the plugin.
  *
- * @link       http://example.com
+ * @link       https://github.com/hail/hail-wordpress
  * @since      1.0.0
  *
  * @package    Hail
@@ -18,7 +18,7 @@
  *
  * @package    Hail
  * @subpackage Hail/admin
- * @author     Your Name <email@example.com>
+ * @author     Benjamin Dawson <ben@hail.to>
  */
 class Hail_Admin {
 
