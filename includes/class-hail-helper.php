@@ -66,7 +66,7 @@ class Hail_Helper {
       'urlAuthorize'            => $this->hailBaseURI . 'oauth/authorise',
       'urlAccessToken'          => $this->hailBaseURI . 'api/v1/oauth/access_token',
       'urlResourceOwnerDetails' => $this->hailBaseURI . 'api/v1/me',
-      'devMode'                 => true
+      'devMode'                 => $this->dev_mode
     ]);
   }
 
