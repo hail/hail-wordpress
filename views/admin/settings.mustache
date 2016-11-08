@@ -8,6 +8,8 @@
   <div class="updated"><p>Import successful. {{import_results}}</p></div>
   {{/import_results}}
 
+  {{{help}}}
+
   <form method="post" name="setup-options" action="options.php">
 
     <input type='hidden' name='option_page' value='{{plugin_name}}' />
@@ -17,21 +19,21 @@
     <fieldset>
       <legend class="screen-reader-text"><span>Client ID</span></legend>
       <label for="{{plugin_name}}-client_id">
-          <input type="text" class="{{plugin_name}}-client_id" id="{{plugin-name}}-client_id" name="{{plugin_name}}[client_id]"  value="{{client_id}}"  />
-          <span>Client ID</span>
+        <input type="text" class="{{plugin_name}}-client_id" id="{{plugin-name}}-client_id" name="{{plugin_name}}[client_id]"  value="{{client_id}}"  />
+        <span>Client ID</span>
       </label>
     </fieldset>
 
     <fieldset>
       <legend class="screen-reader-text"><span>Client Secret</span></legend>
       <label for="{{plugin_name}}-client_secret">
-          <input type="text" class="{{plugin_name}}-client_secret" id="{{plugin_name}}-client_secret" name="{{plugin_name}}[client_secret]"  value="{{client_secret}}"  />
-          <span>Client secret</span>
+        <input type="text" class="{{plugin_name}}-client_secret" id="{{plugin_name}}-client_secret" name="{{plugin_name}}[client_secret]"  value="{{client_secret}}"  />
+        <span>Client secret</span>
       </label>
     </fieldset>
 
     <!-- Tags and stuff -->
-    <fieldset>
+    <fieldset style="{{^show_ptag}}display: none;{{/show_ptag}}">
       <legend class="screen-reader-text"><span>Primary Private Tag ID</span></legend>
       <label for="{{plugin_name}}-primary_ptag">
         <input type="text" class="{{plugin_name}}-primary_ptag" id="{{plugin_name}}-primary_ptag" name="{{plugin_name}}[primary_ptag]" value="{{primary_ptag}}" />
@@ -52,10 +54,14 @@
     <br />
 
     <!-- mustache conditional? -->
+    {{#authorisable}}
     <a class="button-primary" href="{{authorization_url}}">Authorise</a>
+    {{/authorisable}}
 
     <!-- if ptag test successful -->
+    {{#importable}}
     <a class="button-primary" href="{{hail_import_url}}">Import</a>
+    {{/importable}}
 
     {{{submit_button}}}
 

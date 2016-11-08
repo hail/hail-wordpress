@@ -138,7 +138,7 @@ class Hail_Admin {
 		// we don't do an action and complete the oauth flow at the same time
 		if (isset($_GET['code']) && !empty($_GET['code'])) {
 			// this then redirects to the default wordpress hail section url
-			$this->helper->updateToken($_GET['code']);
+			$this->helper->completeOAuthFlow($_GET['code']);
 			return;
 		}
 
@@ -160,6 +160,8 @@ class Hail_Admin {
 		// $redis_enabled = $this->helper->getConfigRedisEnabled();
 		$primary_ptag = $this->helper->getConfigPrimaryPtag();
 		$authorization_url = $this->helper->getAuthorizationUrl();
+		$user_id = get_option('hail-user_id');
+		$organisation_id = get_option('hail-organisation_id');
 
 		// do I need nonce?
 		// can I test that the nonce does what it's supposed to do?
@@ -184,13 +186,15 @@ class Hail_Admin {
 		$test_text = null;
 
 
-		$has_authorized = get_option('hail-access_token');
+		$has_authorised = get_option('hail-access_token') ? true : false;
+		$importable = false;
 
-		// if it looks like we've authorized before
-		if ($has_authorized) {
+		// if it looks like we've authorised before
+		if ($has_authorised) {
 
-			// tests
+			// tests and ptag fetching
 			if ($client_id && $client_secret) {
+
 				if (!$primary_ptag) {
 					if ($this->helper->testMe()) {
 						$test_class = 'updated';
@@ -203,33 +207,98 @@ class Hail_Admin {
 					if ($this->helper->testPtag($primary_ptag)) {
 						$test_class = 'updated';
 						$test_text = 'Credentials are correct, and Private Tag is accessible';
+						$importable = true;
 					} else {
 						$test_class = 'error';
 						$test_text = 'The specified Private Tag could not be accessed using the given credentials';
 					}
 				}
+
+			} else {
+
+				// if we've authorised in the past but the client_id or client_secret
+				// aren't set then remove access tokens etc and both the client_id
+				// and client_secret
+
+				// TODO: perhaps use helper functions for setting / updating and deleting
+				// these options?
+				delete_option('hail-access_token');
+				delete_option('hail-refresh_token');
+				delete_option('hail-expires');
+
+				delete_option($this->plugin_name);
+
+				$client_id = null;
+				$client_secret = null;
+				$primary_ptag = null;
+
+				$has_authorised = false;
+
 			}
 
 		}
 
-		// reddis test
+		$authorisable = $client_id && $client_secret;
+		$redirect_uri = admin_url('options-general.php?page=' . $this->plugin_name);
+
+		$help = false;
+
+		// perhaps test the error here, and skip the whole info block (or
+		// provide an alternative error-like one)
+
+		// help text depending on status (doesn't account for errors)
+		if (!$authorisable) {
+
+			$help = '<p>To get started, <a href="https://hail.to/app/user/applications">register an OAuth client in Hail</a>. You\'ll need to add an <strong>OAuth redirect URI</strong>, which should be set to <code>' . $redirect_uri . '</code></p>' .
+			  			'<p>Once that\'s done, enter in your <strong>Client ID</strong> and <strong>Client Secret</strong> and hit the save button below.</p>';
+
+		} else if ($authorisable && !$has_authorised) {
+
+			$help = '<p>Looking good so far. Now click the "Authorise" button below to create the connection to Hail.</p>';
+
+		} else if (!$primary_ptag) {
+			// you've authorised but haven't set a ptag
+
+			$help = '<p>Great work! Now you need to add a primary Private Tag ID for pulling in a subset of your Hail Content. Unless you\'re a developer, you probably want to <a href="mailto:support@hail.to">contact Hail support</a> and ask for some help.</p>';
+
+		} else {
+
+			$help = '<p>Fantastic! It looks like you\'ve done everything correctly. You can manually import your Hail content using the "Import" button below, but it will be imported on a schedule anyway.</p>';
+
+		}
 
 		$html = $this->mustache->render(
 			'settings',
 			array(
+
 				'plugin_name' => $this->plugin_name,
 				'title' => get_admin_page_title(),
+
 				'settings_nonce' => wp_nonce_field($this->plugin_name . '-options'),
+
+				'redirect_uri' => $redirect_uri,
+
 				// tests
 				'test_class' => $test_class,
 				'test_text' => $test_text,
 
+				// help copy
+				'help' => $help,
+
+				// conditional based on current progress
+				'show_ptag' => $has_authorised,
+
+				// config
 				'client_id' => $client_id,
 				'client_secret' => $client_secret,
 				'primary_ptag' => $primary_ptag,
-				// 'redis_checked' => false,
+
+				'authorisable' => $authorisable,
+				'importable' => $importable,
+
 				'authorization_url' => $authorization_url,
 				'hail_import_url' => $hail_import_url,
+
 				'submit_button' => get_submit_button('Save all changes', 'primary', 'submit', false),
 
 				'import_results' => $import_results,

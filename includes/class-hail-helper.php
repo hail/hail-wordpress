@@ -18,7 +18,7 @@ class Hail_Helper {
   private $plugin_name;
 
   private $provider;
-  private $hailBaseURI = 'https://dev.hail.to/';
+  private $hailBaseURI;
   // private $clientID;
   // private $clientSecret;
   private $config;
@@ -26,11 +26,13 @@ class Hail_Helper {
   private static $instance;
 
   function __construct($plugin_name) {
+    // for testing only
+    $this->dev_mode = (WP_ENV == 'development' ? true : false);
+    $this->hailBaseURI = ($this->dev_mode ? 'https://dev.hail.to/' : 'https://hail.to/');
+
     $this->plugin_name = $plugin_name;
 
     $this->config = get_option($this->plugin_name) ?: array();
-
-
 
     $this->guzzle = new GuzzleHttp\Client();
     // $this->guzzle->setDefaultHeaders(
@@ -60,7 +62,7 @@ class Hail_Helper {
     $this->provider = new League\OAuth2\Client\Provider\HailProvider([
       'clientId'                => $this->config['client_id'],    // The client ID assigned to you by the provider
       'clientSecret'            => $this->config['client_secret'],   // The client password assigned to you by the provider
-      'redirectUri'             => 'http://dev.vlnprimary.school.nz/wp/wp-admin/admin.php?page=hail&action=verify',
+      'redirectUri'             => admin_url('options-general.php?page=' . $this->plugin_name),
       'urlAuthorize'            => $this->hailBaseURI . 'oauth/authorise',
       'urlAccessToken'          => $this->hailBaseURI . 'api/v1/oauth/access_token',
       'urlResourceOwnerDetails' => $this->hailBaseURI . 'api/v1/me',
@@ -132,7 +134,7 @@ class Hail_Helper {
 
 
   // always a GET call
-  private function call($url, $cache = true) {
+  private function call($url, $cache = false) {
     $url = $this->hailBaseURI . $url;
 
     error_log($url);
@@ -217,7 +219,7 @@ class Hail_Helper {
     return $json;
   }
 
-  public function updateToken($code) {
+  public function completeOAuthFlow($code) {
 
     $access_token = $this->getAccessToken('authorization_code', [
       'code' => $code
@@ -244,6 +246,21 @@ class Hail_Helper {
       add_option('hail-expires', $access_token->getExpires());
     }
 
+
+    // make a request to /me and store the user id
+    try {
+      $result = $this->call('api/v1/me');
+      $user_id = $result['id'];
+      if (get_option('hail-user_id') !== false) {
+        update_option('hail-user_id', $user_id);
+      } else {
+        add_option('hail-user_id', $user_id);
+      }
+    } catch (Exception $e) {
+      // fatal error
+      // TODO: do something interesting
+    }
+
     $this->toAdminUrlDefault();
 
   }
@@ -264,6 +281,28 @@ class Hail_Helper {
     } catch (Exception $e) {
       return false;
     }
+  }
+
+  // public function getPtags() {
+  //   return $this->call('api/v1/')
+  // }
+
+  // TODO: need the user id to fetch my organisations.
+  // potentially store the user id against the helper assuming that me has been fetched
+  // me should probably be fetched as part of the oauth flow completion
+
+  // once we have the user id we can request the organisations
+  public function getOrganisations() {
+    // TODO: I really need to consolidate the config. stupid wordpress
+    return $this->call('api/v1/users/' . get_option('hail-user_id') . '/organisations');
+  }
+
+  // you should only be connecting to one organisation (one ptag is used), so that
+  // organisation id can be stored as config
+
+  // once we have the organisations we can fetch the organisatinso private tags
+  public function getPrivateTags() {
+    return $this->call();
   }
 
   public function getArticle($id) {
