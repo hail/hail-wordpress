@@ -16,7 +16,7 @@
  * Plugin Name:       Hail
  * Plugin URI:        https://github.com/hail/hail-wordpress
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
- * Version:           1.0.5
+ * Version:           1.0.6
  * Author:            Benjamin Dawson
  * Author URI:        https://get.hail.to
  * License:           GPL-2.0+

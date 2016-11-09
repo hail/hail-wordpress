@@ -41,15 +41,9 @@ class Hail_Helper {
     //   )
     // );
 
-    // $this->predis = new Predis\Client();
-    $this->predis = false;
-
-    // error_log('testing for redis');
-    // try {
-    //   $this->predis->ping();
-    // } catch (Predis\Connection\ConnectionException $e) {
-    //   $this->predis = false;
-    // }
+    // wp_cache_set('hail-test', 'cached-value');
+    //
+    // error_log('%%%%' . wp_cache_get('hail-test') . '%%%%');
 
   }
 
@@ -76,6 +70,12 @@ class Hail_Helper {
     }
 
     return self::$instance;
+  }
+
+  private function log($thing) {
+    if ($this->dev_mode) {
+      error_log("***\n" . var_export($thing, true));
+    }
   }
 
   public function toAdminUrlDefault() {
@@ -134,12 +134,10 @@ class Hail_Helper {
 
 
   // always a GET call
-  private function call($url, $cache = false) {
+  private function call($url, $cache = true) {
     $url = $this->hailBaseURI . $url;
 
-    error_log($url);
-
-    if (!$this->predis) $cache = false;
+    // $this->log($url);
 
     if (!$this->provider) {
       $this->initProvider();
@@ -149,22 +147,25 @@ class Hail_Helper {
       throw new Exception('Not enough data was configured to instantiate the provider');
     }
 
-    // TODO: a way of testing whether or not redis exists and is working
-
     // create an hash of the URL being requested
-    // look up the hash in the cache (have different cache providers?)
+    // look up the hash in the cache
     // if matched then return cached results
     // if not matched then proceed to make request and then store result against hash
 
-    // if ($cache) {
-    //   $hash = sha1($url);
-    //   $cached_result_body = $this->predis->get($hash);
-    //
-    //   if ($cached_result_body) {
-    //     return json_decode($cached_result_body, true);
-    //   }
-    // }
+    if ($cache) {
+      $hash = 'hail' . sha1($url);
+      // $this->log($hash);
+      $cached_result_body = get_transient($hash);
 
+      // $this->log('cached result body: ' . $cached_result_body);
+
+      if ($cached_result_body) {
+        $this->log('cache hit');
+        return json_decode($cached_result_body, true);
+      } else {
+        $this->log('no cache hit');
+      }
+    }
 
     $access_token = get_option('hail-access_token');
     $refresh_token = get_option('hail-refresh_token');
@@ -175,12 +176,6 @@ class Hail_Helper {
       'refresh_token' => $refresh_token,
       'expires' => $expires
     ]);
-
-    // $request = $provider->getAuthenticatedRequest(
-    //   'GET',
-    //   'http://brentertainment.com/oauth2/lockdin/resource',
-    //   $accessToken
-    // );
 
     // error_log('existing token: ' . var_export($token, true));
 
@@ -198,9 +193,9 @@ class Hail_Helper {
       update_option('hail-access_token', $newToken->getToken());
       update_option('hail-refresh_token', $newToken->getRefreshToken());
       update_option('hail-expires', $newToken->getExpires());
+      // hail user will be the same
 
     }
-
 
     $headers = array(
       'Authorization' => 'Bearer ' . $token->getToken()
@@ -210,11 +205,16 @@ class Hail_Helper {
 
     $result_body = $this->guzzle->send($request)->getBody();
 
+    // error_log('&&&&');
+    // error_log($result_body);
+    // error_log('&&&&');
+
     $json = json_decode($result_body, true);
 
-    // if ($cache) {
-    //   $this->predis->set($hash, $result_body, 'ex', 60);
-    // }
+    if ($cache) {
+      $this->log('setting cache: ' . $hash);
+      set_transient($hash, (string) $result_body, 60);
+    }
 
     return $json;
   }
@@ -249,7 +249,7 @@ class Hail_Helper {
 
     // make a request to /me and store the user id
     try {
-      $result = $this->call('api/v1/me');
+      $result = $this->call('api/v1/me', false);
       $user_id = $result['id'];
       if (get_option('hail-user_id') !== false) {
         update_option('hail-user_id', $user_id);
@@ -307,6 +307,11 @@ class Hail_Helper {
 
   public function getArticle($id) {
     return $this->call('api/v1/articles/' . $id);
+  }
+
+  public function getImage($id) {
+    if (!$id) return false;
+    return $this->call('api/v1/images/' . $id);
   }
 
   public function getArticlesByPrivateTag($id, $cache = true) {
@@ -422,10 +427,10 @@ class Hail_Helper {
         'post_content' => $article['lead'] . $article['body']
       );
 
-      $hero_url = false;
+      $hero_id = false;
       $hero_image = $article['hero_image'];
       if ($hero_image) {
-        $hero_url = $hero_image['file_1000_url'];
+        $hero_id = $hero_image['id'];
       }
 
       if ($has_updated) {
@@ -435,10 +440,10 @@ class Hail_Helper {
         update_post_meta($existing_id, 'body', $article['body']);
         update_post_meta($existing_id, 'date', $article['date']);
         update_post_meta($existing_id, 'updated_date', $article['updated_date']);
-        if ($hero_url) {
-          update_post_meta($existing_id, 'hero_url', $hero_url);
+        if ($hero_id) {
+          update_post_meta($existing_id, 'hero_id', $hero_id);
         } else {
-          delete_post_meta($existing_id, 'hero_url');
+          delete_post_meta($existing_id, 'hero_id');
         }
 
         // update the post_tags
@@ -458,7 +463,11 @@ class Hail_Helper {
           add_post_meta($id, 'body', $article['body']);
           add_post_meta($id, 'date', $article['date']);
           add_post_meta($id, 'updated_date', $article['updated_date']);
-          if ($hero_url) add_post_meta($id, 'hero_url', $hero_url);
+          if ($hero_id) {
+            // only store the image id as image data may change independently
+            // of the article, so we'll fetch it (with optional cache) each time
+            add_post_meta($id, 'hero_id', $hero_id);
+          }
 
           // add the Hail tags as post_tags
           wp_set_object_terms($id, $ptags, 'hail_tag');
@@ -533,7 +542,7 @@ class Hail_Helper {
 
   }
 
-  public static function shortcodeHTML($attrs) {
+  public function shortcodeHTML($attrs) {
 
     $query = self::shortcodeQuery($attrs);
     $hail_index_number = 0;
@@ -550,13 +559,19 @@ class Hail_Helper {
       while ($query->have_posts()) {
         $query->the_post();
         $post_id = get_the_ID();
+        $hero_id = get_post_meta($post_id, 'hero_id', true);
+
+        $hero = $this->getImage($hero_id);
         ?>
 
         <div class="hail-entry <?php echo esc_attr( self::get_article_class( $hail_index_number, $attrs['columns'] ) ); ?>">
           <header class="hail-entry-header">
             <?php
             if ($attrs['display_hero']) {
-              echo self::get_hero_image($post_id);
+              // self::get_hero_image($post_id);
+              if ($hero) {
+                echo '<a class="hail-featured-image" href="' . esc_url(get_permalink($post_id)) . '">' . '<img src="' . $hero['file_500_square_url'] . '"></a>';
+              }
             }
             ?>
 
@@ -626,12 +641,12 @@ class Hail_Helper {
 
   }
 
-  private static function get_hero_image($post_id) {
-    $url = get_post_meta($post_id, 'hero_url', true);
-
-    if ($url) {
-      return '<a class="hail-featured-image" href="' . esc_url(get_permalink($post_id)) . '">' . '<img src="' . $url . '"></a>';
-    }
-  }
+  // private static function get_hero_image($post_id) {
+  //   $url = get_post_meta($post_id, 'hero_url', true);
+  //
+  //   if ($url) {
+  //     return '<a class="hail-featured-image" href="' . esc_url(get_permalink($post_id)) . '">' . '<img src="' . $url . '"></a>';
+  //   }
+  // }
 
 }
