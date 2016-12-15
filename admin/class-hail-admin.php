@@ -423,7 +423,7 @@ class Hail_Admin {
 				),
 				'public' => true,
 				'show_ui' => true,
-				'show_in_nav_menus' => false,
+				'show_in_nav_menus' => true,
 				'hierarchical' => false,
 				'supports' => array(
 					// keep this here in case we want to change the title

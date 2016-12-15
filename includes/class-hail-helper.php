@@ -27,7 +27,8 @@ class Hail_Helper {
 
   function __construct($plugin_name) {
     // for testing only
-    $this->dev_mode = (WP_ENV == 'development' ? true : false);
+    // $this->dev_mode = (WP_ENV == 'development' ? true : false);
+    $this->dev_mode = false;
     $this->hailBaseURI = ($this->dev_mode ? 'https://dev.hail.to/' : 'https://hail.to/');
 
     $this->plugin_name = $plugin_name;
@@ -314,9 +315,14 @@ class Hail_Helper {
     return $this->call('api/v1/images/' . $id);
   }
 
+  public function getVideo($id) {
+    if (!$id) return false;
+    return $this->call('api/v1/videos/' . $id);
+  }
+
   public function getArticlesByPrivateTag($id, $cache = true) {
     // https://dev.hail.to/api/v1/private-tags/58kHKvj/articles?limit=50&order=date%7Cdesc&offset=0
-    return $this->call('api/v1/private-tags/' . $id . '/articles', $cache);
+    return $this->call('api/v1/private-tags/' . $id . '/articles?status=published', $cache);
   }
 
   public function getArticleImages($id, $cache = true) {
@@ -428,9 +434,15 @@ class Hail_Helper {
       );
 
       $hero_id = false;
+      $hero_type = null;
       $hero_image = $article['hero_image'];
+      $hero_video = $article['hero_video'];
       if ($hero_image) {
         $hero_id = $hero_image['id'];
+        $hero_type = 'image';
+      } else if ($hero_video) {
+        $hero_id = $hero_video['id'];
+        $hero_type = 'video';
       }
 
       if ($has_updated) {
@@ -442,8 +454,10 @@ class Hail_Helper {
         update_post_meta($existing_id, 'updated_date', $article['updated_date']);
         if ($hero_id) {
           update_post_meta($existing_id, 'hero_id', $hero_id);
+          update_post_meta($existing_id, 'hero_type', $hero_type);
         } else {
           delete_post_meta($existing_id, 'hero_id');
+          delete_post_meta($existing_id, 'hero_type');
         }
 
         // update the post_tags
@@ -467,6 +481,7 @@ class Hail_Helper {
             // only store the image id as image data may change independently
             // of the article, so we'll fetch it (with optional cache) each time
             add_post_meta($id, 'hero_id', $hero_id);
+            add_post_meta($id, 'hero_type', $hero_type);
           }
 
           // add the Hail tags as post_tags
@@ -523,6 +538,12 @@ class Hail_Helper {
       'posts_per_page' => $attrs['showposts'],
     );
 
+    if ($attrs['orderby'] == 'date') {
+      // $default['orderby'] = 'meta_value_num';
+      $default['meta_key'] = 'date';
+      $default['meta_type'] = 'DATE';
+    }
+
     $args = wp_parse_args($attrs, $default);
     $args['post_type'] = 'hail_article';
 
@@ -560,17 +581,29 @@ class Hail_Helper {
         $query->the_post();
         $post_id = get_the_ID();
         $hero_id = get_post_meta($post_id, 'hero_id', true);
+        $hero_type = get_post_meta($post_id, 'hero_type', true);
 
-        $hero = $this->getImage($hero_id);
+        $hero_image = $hero_video = null;
+        if ($hero_type == 'image') {
+          $hero_image = $this->getImage($hero_id);
+        } else if ($hero_type == 'video') {
+          $hero_video = $this->getVideo($hero_id);
+        }
         ?>
 
         <div class="hail-entry <?php echo esc_attr( self::get_article_class( $hail_index_number, $attrs['columns'] ) ); ?>">
           <header class="hail-entry-header">
             <?php
             if ($attrs['display_hero']) {
+
+              if ($hero_type == 'image') {
+                $hero_preview = $hero_image['file_500_square_url'];
+              } else if ($hero_type == 'video') {
+                $hero_preview = $hero_video['preview']['file_500_square_url'];
+              }
               // self::get_hero_image($post_id);
-              if ($hero) {
-                echo '<a class="hail-featured-image" href="' . esc_url(get_permalink($post_id)) . '">' . '<img src="' . $hero['file_500_square_url'] . '"></a>';
+              if ($hero_image || $hero_video) {
+                echo '<a class="hail-featured-image" href="' . esc_url(get_permalink($post_id)) . '">' . '<img src="' . $hero_preview . '"></a>';
               }
             }
             ?>
