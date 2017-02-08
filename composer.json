@@ -1,7 +1,7 @@
 {
   "name": "hail/hail-wordpress",
   "type": "wordpress-plugin",
-  "version": "1.0.7",
+  "version": "1.0.8",
 
   "require": {
     "php": ">=5.3.2",

@@ -460,6 +460,18 @@ class Hail_Helper {
           delete_post_meta($existing_id, 'hero_type');
         }
 
+        // if the article title has changed then update the actual post title
+        // (not the meta data)
+        if (strcmp($article['title'], get_the_title($existing_id)) !== 0) {
+
+          $title_update = array(
+            'ID' => $existing_id,
+            'post_title' => $article['title']
+          );
+
+          wp_update_post($title_update);
+        }
+
         // update the post_tags
         wp_set_object_terms($existing_id, $ptags, 'hail_tag');
 
