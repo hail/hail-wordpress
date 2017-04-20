@@ -132,6 +132,7 @@ class Hail_Admin {
 	}
 
 
+
 	public function display_plugin_setup_page() {
 
 		// are we completing the oauth flow or doing an action?
@@ -143,15 +144,33 @@ class Hail_Admin {
 		}
 
 		$import_results = false;
+		$deletion_results = false;
+		$settings_reset = false;
 
 		if (isset($_GET['action'])) {
 			// what actions do we have
 			// import => run import task
 			// code => complete oauth flow
 
-			if ($_GET['action'] == 'import') {
-				list($import_new, $import_changed, $import_deleted) = $this->helper->import();
-				$import_results = 'New: ' . $import_new . ', Changed: ' . $import_changed . ', Deleted: ' . $import_deleted;
+			$action = $_GET['action'];
+
+			switch ($action) {
+
+				case 'import':
+					list($import_new, $import_changed, $import_deleted) = $this->helper->import();
+					$import_results = 'New: ' . $import_new . ', Changed: ' . $import_changed . ', Deleted: ' . $import_deleted;
+					break;
+
+				case 'delete-content':
+					$count_deleted = $this->helper->deleteContent();
+					$deletion_results = 'Deleted: ' . $count_deleted;
+					break;
+
+				case 'delete-settings':
+					$this->helper->deleteSettings();
+					$settings_reset = true;
+					break;
+
 			}
 		}
 
@@ -163,8 +182,8 @@ class Hail_Admin {
 		$user_id = get_option('hail-user_id');
 		$organisation_id = get_option('hail-organisation_id');
 
-		// do I need nonce?
-		// can I test that the nonce does what it's supposed to do?
+
+
 		$hail_test_nonce = wp_create_nonce('hail-test');
 		$hail_test_url = add_query_arg(
 			array(
@@ -173,14 +192,33 @@ class Hail_Admin {
 			),
 			admin_url('admin.php?page=' . $this->plugin_name)
 		);
-		$hail_import_nonce = wp_create_nonce('hail-test');
+		// import action
+		$hail_import_nonce = wp_create_nonce('hail-import');
 		$hail_import_url = add_query_arg(
 			array(
 				'action' => 'import',
 				'nonce' => $hail_import_nonce
-			)
+			),
+			admin_url('admin.php?page=' . $this->plugin_name)
 		);
-
+		// delete content action
+		$hail_delete_content_nonce = wp_create_nonce('hail-delete-content');
+		$hail_delete_content_url = add_query_arg(
+			array(
+				'action' => 'delete-content',
+				'nonce' => $hail_delete_content_nonce
+			),
+			admin_url('admin.php?page=' . $this->plugin_name)
+		);
+		// delete settings action
+		// $hail_delete_settings_nonce = wp_create_nonce('hail-delete-settings');
+		$hail_delete_settings_url = add_query_arg(
+			array(
+				'action' => 'delete-settings',
+				// 'nonce' => $hail_delete_settings_nonce
+			),
+			admin_url('admin.php?page=' . $this->plugin_name)
+		);
 
 		$test_class = null;
 		$test_text = null;
@@ -274,7 +312,8 @@ class Hail_Admin {
 				'plugin_name' => $this->plugin_name,
 				'title' => get_admin_page_title(),
 
-				'settings_nonce' => wp_nonce_field($this->plugin_name . '-options'),
+				'return_uri' => admin_url('admin.php?page=' . $this->plugin_name),
+				'settings_nonce' => wp_nonce_field($this->plugin_name . '-options', '_wpnonce', false),
 
 				'redirect_uri' => $redirect_uri,
 
@@ -301,7 +340,12 @@ class Hail_Admin {
 
 				'submit_button' => get_submit_button('Save all changes', 'primary', 'submit', false),
 
+				'hail_delete_content_url' => $hail_delete_content_url,
+				'hail_delete_settings_url' => $hail_delete_settings_url,
+
 				'import_results' => $import_results,
+				'deletion_results' => $deletion_results,
+				'settings_reset' => $settings_reset
 			)
 		);
 

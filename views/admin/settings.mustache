@@ -8,13 +8,22 @@
   <div class="updated"><p>Import successful. {{import_results}}</p></div>
   {{/import_results}}
 
+  {{#deletion_results}}
+  <div class="updated"><p>Deletion successful. {{deletion_results}}</p></div>
+  {{/deletion_results}}
+
+  {{#settings_reset}}
+  <div class="updated"><p>Settings have been reset.</p></div>
+  {{/settings_reset}}
+
   {{{help}}}
 
   <form method="post" name="setup-options" action="options.php">
 
-    <input type='hidden' name='option_page' value='{{plugin_name}}' />
+    <input type="hidden" name="option_page" value="{{plugin_name}}" />
     <input type="hidden" name="action" value="update" />
     {{{settings_nonce}}}
+    <input type="hidden" name="_wp_http_referer" value="{{return_uri}}">
 
     <fieldset>
       <legend class="screen-reader-text"><span>Client ID</span></legend>
@@ -64,6 +73,14 @@
     {{/importable}}
 
     {{{submit_button}}}
+
+    <br /><br /><br />
+    <h2>Here be dragons</h2>
+    <!-- not at all dangerous delete all button -->
+    <a class="button button-red" href="{{hail_delete_content_url}}">Clear existing imported content</a>
+    <a class="button button-red" href="{{hail_delete_settings_url}}">Reset settings (be careful)</a>
+
+
 
   </form>
 

@@ -542,6 +542,44 @@ class Hail_Helper {
 
   }
 
+  public function deleteContent() {
+
+    $query_args = array(
+      'posts_per_page' => -1,
+      'post_type' => 'hail_article'
+    );
+
+    $query = new WP_Query($query_args);
+
+    $wp_ids = wp_list_pluck($query->posts, 'ID');
+
+    $count_deleted = 0;
+
+    foreach ($wp_ids as $wp_id) {
+      wp_delete_post($wp_id, true);
+      $count_deleted++;
+    }
+
+    return $count_deleted;
+
+  }
+
+  public function deleteSettings() {
+
+    delete_option('hail-user_id');
+    delete_option('hail-organisation_id');
+
+    delete_option('hail-access_token');
+    delete_option('hail-refresh_token');
+    delete_option('hail-expires');
+
+    delete_option('hail');
+
+    // reset the config object in case it's used while this object is still alive
+    $this->config = array();
+
+  }
+
   private static function shortcodeQuery($attrs) {
 
     $default = array(
