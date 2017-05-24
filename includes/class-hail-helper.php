@@ -333,6 +333,14 @@ class Hail_Helper {
     return $this->call('api/v1/articles/' . $id . '/videos', $cache);
   }
 
+  public function getPublicationsByPrivateTag($id, $limit = false, $cache = true) {
+    $url = 'api/v1/private-tags/' . $id . '/publications?status=published';
+    if ($limit) {
+      $url .= '&limit=' . $limit;
+    }
+    $url .= '&order=date%7Cdesc';
+    return $this->call($url, $cache);
+  }
 
   public function import($cache = false) {
     $ptag = $this->getConfigPrimaryPtag();
