@@ -1,5 +1,17 @@
 {
   "name": "hail/hail-wordpress",
+  "description": "Wordpress plugin for Hail integration",
+  "keywords": ["wordpress", "plugin", "hail", "content"],
+  "homepage": "https://get.hail.to",
+  "license": "GPLv2 or later",
+  "authors": [
+    {
+      "name": "Benjamin Dawson",
+      "email": "developers@hail.to",
+      "homepage": "https://github.com/neverthemachineforever"
+    }
+  ],
+
   "type": "wordpress-plugin",
   "version": "1.0.11",
 
