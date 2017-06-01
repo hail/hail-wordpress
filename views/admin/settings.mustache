@@ -74,14 +74,35 @@
 
     {{{submit_button}}}
 
-    <br /><br /><br />
-    <h2>Here be dragons</h2>
-    <!-- not at all dangerous delete all button -->
-    <a class="button button-red" href="{{hail_delete_content_url}}">Clear existing imported content</a>
-    <a class="button button-red" href="{{hail_delete_settings_url}}">Reset settings (be careful)</a>
+    <br /><br />
 
+    <p>
+      Additional documentation can be found <a target="_blank" href="https://github.com/hail/hail-wordpress">here</a>
+    </p>
 
+    <br /><br />
+
+    <a href="#" id="hail-show-dangerous-settings" style="color: red">o</a>
+    <div id="hail-hidden-dangerous-settings" style="display: none">
+      <h2>Here be dragons</h2>
+      <!-- not at all dangerous delete all button -->
+      <a class="button button-red" href="{{hail_delete_content_url}}">Clear existing imported content</a>
+      <a class="button button-red" href="{{hail_delete_settings_url}}">Reset settings (be careful)</a>
+    </div>
 
   </form>
 
 </div>
+
+<script type="text/javascript">
+  (function() {
+    var link = document.getElementById('hail-show-dangerous-settings');
+    var container = document.getElementById('hail-hidden-dangerous-settings');
+
+    link.onclick = function(e) {
+      if (e) e.preventDefault();
+      link.style.display = 'none';
+      container.style.display = 'block';
+    };
+  })();
+</script>

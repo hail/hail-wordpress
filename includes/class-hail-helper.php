@@ -463,9 +463,15 @@ class Hail_Helper {
         if ($hero_id) {
           update_post_meta($existing_id, 'hero_id', $hero_id);
           update_post_meta($existing_id, 'hero_type', $hero_type);
+          if ($hero_type == 'image') {
+            update_post_meta($existing_id, 'hero_url', $hero_image['file_1000_url']);
+          } else if ($hero_type == 'video') {
+            update_post_meta($existing_id, 'hero_url', $hero_video['preview']['file_1000_url']);
+          }
         } else {
           delete_post_meta($existing_id, 'hero_id');
           delete_post_meta($existing_id, 'hero_type');
+          delete_post_meta($existing_id, 'hero_url');
         }
 
 
@@ -507,6 +513,13 @@ class Hail_Helper {
             // of the article, so we'll fetch it (with optional cache) each time
             add_post_meta($id, 'hero_id', $hero_id);
             add_post_meta($id, 'hero_type', $hero_type);
+
+            if ($hero_type == 'image') {
+              add_post_meta($id, 'hero_url', $hero_image['file_1000_url']);
+            } else if ($hero_type == 'video') {
+              add_post_meta($id, 'hero_url', $hero_video['preview']['file_1000_url']);
+            }
+
           }
 
           // add the Hail tags as post_tags
