@@ -214,7 +214,7 @@ class Hail_Helper {
 
     if ($cache) {
       $this->log('setting cache: ' . $hash);
-      set_transient($hash, (string) $result_body, 60);
+      set_transient($hash, (string) $result_body, 180);
     }
 
     return $json;
@@ -464,14 +464,25 @@ class Hail_Helper {
           update_post_meta($existing_id, 'hero_id', $hero_id);
           update_post_meta($existing_id, 'hero_type', $hero_type);
           if ($hero_type == 'image') {
-            update_post_meta($existing_id, 'hero_url', $hero_image['file_1000_url']);
+            update_post_meta($existing_id, 'hero_url_1000', $hero_image['file_1000_url']);
+            update_post_meta($existing_id, 'hero_url_500', $hero_image['file_500_url']);
+            update_post_meta($existing_id, 'hero_url_500_square', $hero_image['file_500_square_url']);
           } else if ($hero_type == 'video') {
-            update_post_meta($existing_id, 'hero_url', $hero_video['preview']['file_1000_url']);
+            update_post_meta($existing_id, 'hero_url_1000', $hero_video['preview']['file_1000_url']);
+            update_post_meta($existing_id, 'hero_url_500', $hero_video['preview']['file_500_url']);
+            update_post_meta($existing_id, 'hero_url_500_square', $hero_video['preview']['file_500_square_url']);
+            update_post_meta($existing_id, 'hero_video_service', $hero_video['service']);
+            update_post_meta($existing_id, 'hero_video_data', $hero_video['service_data']);
           }
         } else {
           delete_post_meta($existing_id, 'hero_id');
           delete_post_meta($existing_id, 'hero_type');
-          delete_post_meta($existing_id, 'hero_url');
+          delete_post_meta($existing_id, 'hero_url_1000');
+          delete_post_meta($existing_id, 'hero_url_500');
+          delete_post_meta($existing_id, 'hero_url_500_square');
+          // is there any harm in deleting something that doesn't exist?
+          delete_post_meta($existing_id, 'hero_video_service');
+          delete_post_meta($existing_id, 'hero_video_data');
         }
 
 
@@ -515,9 +526,15 @@ class Hail_Helper {
             add_post_meta($id, 'hero_type', $hero_type);
 
             if ($hero_type == 'image') {
-              add_post_meta($id, 'hero_url', $hero_image['file_1000_url']);
+              add_post_meta($id, 'hero_url_1000', $hero_image['file_1000_url']);
+              add_post_meta($id, 'hero_url_500', $hero_image['file_500_url']);
+              add_post_meta($id, 'hero_url_500_square', $hero_image['file_500_square_url']);
             } else if ($hero_type == 'video') {
-              add_post_meta($id, 'hero_url', $hero_video['preview']['file_1000_url']);
+              add_post_meta($id, 'hero_url_1000', $hero_video['preview']['file_1000_url']);
+              add_post_meta($id, 'hero_url_500', $hero_video['preview']['file_500_url']);
+              add_post_meta($id, 'hero_url_500_square', $hero_video['preview']['file_500_square_url']);
+              add_post_meta($id, 'hero_video_service', $hero_video['service']);
+              add_post_meta($id, 'hero_video_data', $hero_video['service_data']);
             }
 
           }
