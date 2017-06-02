@@ -49,7 +49,13 @@ The helper functions and shortcodes can be used at this point, but you probably 
 
 ### The import process
 
-Overview of how the import process works.
+Articles are imported into a custom post type named "hail_article". This content can't be edited within Wordpress, as it would just be overwritten by the Hail content on import.
+
+The import process requests from the Hail API all articles which are tagged with the private tag specified in the configuration. The modification timestamps are compared with that has previously been imported, and only changed content is updated.
+
+The plugin registers a WP Cron task which is set on an hourly schedule which runs the import process.
+
+Most attributes of the imported content are stored as post_meta.
 
 ### Viewing imported articles / CPT template.
 
@@ -126,13 +132,45 @@ if ($hero_type == 'image') {
 </div>
 ```
 
-### Inline options
+### The Hail Helper
 
+Helper functions for requesting Hail API data are provided by the Hail_Helper class.
 
-Shortcodes
+As per the example above you can get an instance of this class like so:
+```php
+<?php
+$hail = Hail_Helper::getInstance();
+?>
+```
+The following helper functions are available:
+```php
+<?php
+// get an article by it's ID
+$hail->getArticle($article_id);
 
-Helper functions
+// get an image by it's ID
+$hail->getImage($image_id);
 
-## FAQ
+// get a video by it's ID
+$hail->getVideo($video_id);
 
-## Changelog
+// get array of articles by private tag ID, with optional caching
+$hail->getArticlesByPrivateTag($private_tag_id, true);
+
+// get array of an article's attached images by article ID
+$hail->getArticleImages($article_id, true);
+
+// get array of publications by private tag ID, with optional caching
+$hail->getPublicationsByPrivateTag($private_tag_id, true);
+?>
+```
+
+Caching defaults to true on the functions accept it, and utilizes set_transient for caching of API JSON results. Cache times can't currently be edited and are set at 3 minutes.
+
+### Shortcodes
+
+Basic shortcode functionality is provided:
+
+```[hail_content columns=2 display_hero=true orderby=date order=asc]```
+
+## FAQ?
