@@ -432,8 +432,8 @@ class Hail_Admin {
 			'show_admin_column' => true,
 			// 'query_var' => true, // defaults to taxonomy name
 			'rewrite' => array('slug' => 'hail_tag'),
-			'show_ui' => false,
-			'public' => false
+			'show_ui' => true,
+			'public' => true
 		);
 
 		register_taxonomy(

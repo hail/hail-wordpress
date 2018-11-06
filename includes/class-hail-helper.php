@@ -333,6 +333,10 @@ class Hail_Helper {
     return $this->call('api/v1/articles/' . $id . '/videos', $cache);
   }
 
+  public function getArticleAttachments($id, $cache = true) {
+    return $this->call('api/v1/articles/' . $id . '/attachments', $cache);
+  }
+
   public function getPublicationsByPrivateTag($id, $limit = false, $cache = true) {
     $url = 'api/v1/private-tags/' . $id . '/publications?status=published';
     if ($limit) {
@@ -373,7 +377,7 @@ class Hail_Helper {
       $hail_ids[] = $article['id'];
 
       $ptags = [];
-      foreach($article['private_tags'] as $ptag) {
+      foreach($article['tags'] as $ptag) {
         $ptags[] = $ptag['name'];
       }
 
@@ -460,6 +464,7 @@ class Hail_Helper {
         update_post_meta($existing_id, 'body', $article['body']);
         update_post_meta($existing_id, 'date', $article['date']);
         update_post_meta($existing_id, 'updated_date', $article['updated_date']);
+        update_post_meta($existing_id, 'author', $article['author']);
         if ($hero_id) {
           update_post_meta($existing_id, 'hero_id', $hero_id);
           update_post_meta($existing_id, 'hero_type', $hero_type);
@@ -519,6 +524,7 @@ class Hail_Helper {
           add_post_meta($id, 'body', $article['body']);
           add_post_meta($id, 'date', $article['date']);
           add_post_meta($id, 'updated_date', $article['updated_date']);
+          add_post_meta($id, 'author', $article['author']);
           if ($hero_id) {
             // only store the image id as image data may change independently
             // of the article, so we'll fetch it (with optional cache) each time
@@ -623,7 +629,7 @@ class Hail_Helper {
 
   }
 
-  private static function shortcodeQuery($attrs) {
+  public static function shortcodeQuery($attrs) {
 
     $default = array(
       'order' => $attrs['order'],
@@ -765,6 +771,11 @@ class Hail_Helper {
 
     return implode(' ', $class);
 
+  }
+
+  // public helper functions
+  public static function getCarbonDate($post_id) {
+    return Carbon::parse(get_post_meta($post_id, 'date', true));
   }
 
   // private static function get_hero_image($post_id) {
