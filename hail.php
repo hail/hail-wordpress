@@ -16,7 +16,7 @@
  * Plugin Name:       Hail
  * Plugin URI:        https://github.com/hail/hail-wordpress
  * Description:       Plugin that allows for integration with the Hail API. Supports authentication to the Hail via OAuth, importing of article content into a custom post type, and helper functions / shortcodes to display Hail content on your site.
- * Version:           1.0.11
+ * Version:           1.0.12
  * Author:            Benjamin Dawson
  * Author URI:        https://get.hail.to/meet-our-team
  * License:           GPL-2.0+
